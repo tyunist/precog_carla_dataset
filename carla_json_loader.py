@@ -8,6 +8,17 @@ Author: Nick Rhinehart
 import attrdict
 import json
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+import seaborn as sns
+sns.set_theme(style="whitegrid")
+import pandas as pd
+mpl.rc("axes", labelsize=14)
+mpl.rc("xtick", labelsize=12)
+mpl.rc("ytick", labelsize=12)
+mpl.rc('font', size=24) # Fig's title size 
+mpl.rc('legend', fontsize=14) # Legend's fontsize 
+mpl.rc('pdf', fonttype=42) # To avoid font-type-3 issue when importing figures as pdf for paper publication 
+mpl.rc('font', family={'Times','monospace','sans-serif','monospace'}) # Font type priority in this order
 import numpy as np
 import os
 
@@ -18,15 +29,16 @@ COLORS = """#377eb8
 #984ea3
 #ffd54f""".split('\n')
 
-def plot_datum(datum, meters_max=50):
+def plot_datum(datum, meters_max=50, fig_size=(20,20), feature_cmap='Reds'):
     """Plot a loaded datum by displaying each agent's past and future positions overlaid upon each channel of the BEV.
 
     :param datum: the loaded datum (the return from load_json())
     :param meters_max: the half-width of each plot in meters
+    :param feat_cmap (str): color map for overhead features 
     :returns: the Matplotlib Figure
     """
 
-    fig, axes = plt.subplots(2, 2, figsize=(10,10))
+    fig, axes = plt.subplots(2, 2, figsize=fig_size)
     bev_side_pixels = datum.overhead_features.shape[0] / 2.
     bev_meters = bev_side_pixels / datum.lidar_params['pixels_per_meter'] 
     
@@ -40,7 +52,8 @@ def plot_datum(datum, meters_max=50):
             plabel = None if axidx > 0 else 'Car {} past'.format(other_idx + 2)
             ax.scatter(af[:,0], af[:,1], label=flabel, facecolor='None', edgecolor=COLORS[other_idx + 1], marker='s')
             ax.scatter(ap[:,0], ap[:,1], label=plabel, facecolor='None', edgecolor=COLORS[other_idx + 1], marker='d')
-        ax.imshow(datum.overhead_features[...,axidx], extent=(-bev_meters, bev_meters, bev_meters, -bev_meters), cmap='Reds')
+
+        ax.imshow(datum.overhead_features[...,axidx], extent=(-bev_meters, bev_meters, bev_meters, -bev_meters), cmap=feature_cmap)
         ax.set_title("BEV channel {}".format(axidx))
         ax.set_xlim([-meters_max, meters_max])
         ax.set_ylim([meters_max, -meters_max])
